@@ -251,7 +251,7 @@ In the second part, we consume the messages of the producers using consumers wit
 
 - Examine the control-flow within the class [ConsumerForAllEvents](consumer/src/main/java/com/examples/ConsumerForAllEvents.java)
 
-### ConsumerForGazeEventsForSingleEyeTracker: 
+### ConsumerForGazeEventsForSingleEyeTracker
 
 - Prerequisite for running [ConsumerForGazeEventsForSingleEyeTracker](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTracker.java): [EyeTrackers-Producer](EyeTrackers-Producer/) (Main Class [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java)) is running
 
@@ -272,7 +272,7 @@ In the second part, we consume the messages of the producers using consumers wit
 
 - Examine the control-flow within the class [com.examples.ConsumerForGazeEventsForSingleEyeTracker](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTracker.java)
 
-### ConsumerForGazeEventsForSingleEyeTrackerCustomOffset:
+### ConsumerForGazeEventsForSingleEyeTrackerCustomOffset
 
 - Prerequisite for running [ConsumerForGazeEventsForSingleEyeTrackerCustomOffset](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTrackerCustomOffset.java): [EyeTrackers-Producer](EyeTrackers-Producer/) (Main Class [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java)) is running
 
@@ -304,7 +304,7 @@ In the second part, we consume the messages of the producers using consumers wit
 - Examine the control-flow within the class [com.examples.ConsumerForGazeEventsForSingleEyeTrackerCustomOffset](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTrackerCustomOffset.java). Try out different values in _offsetToReadFrom_
 
 
-### rebalancingExample.*: 
+### rebalancingExample.*
 
 - Prerequisite for running the classes within the package [rebalancingExample](consumer/src/main/java/com/examples/rebalancingExample/): [EyeTrackers-Producer](EyeTrackers-Producer/) (Main Class [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java)) is running
 
