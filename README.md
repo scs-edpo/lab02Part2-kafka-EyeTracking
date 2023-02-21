@@ -1,4 +1,4 @@
-# lab03-kafka-EyeTracking
+# lab02Part2-kafka-EyeTracking
 
 - This lab is based on Lab02, which is also a prerequisite for this lab
 - Note that only the new concepts are described in this lab
