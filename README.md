@@ -73,7 +73,7 @@ In the second part, we consume the messages of the producers using consumers wit
 - Prerequisite for running [ConsumerForAllEvents](consumer/src/main/java/com/examples/ConsumerForAllEvents.java): both [EyeTrackers-Producer](EyeTrackers-Producer/) (Main Class [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java)) and [ClickStream-Producer](ClickStream-Producer/)  (Main Class [com.examples.ClicksProducer](ClickStream-Producer/src/main/java/com/examples/ClicksProducer.java)) are running
 
 
-- Main Class: [ConsumerForAllEvents](consumer/src/main/java/com/examples/ConsumerForAllEvents.java) 
+- Main Class: [com.examples.ConsumerForAllEvents](consumer/src/main/java/com/examples/ConsumerForAllEvents.java) 
     - This consumer consumes the events coming from both [ClickStream-Producer](ClickStream-Producer/) and [EyeTrackers-Producer](EyeTrackers-Producer/)
     - We use a custom deserializer to deserialize the events when received (see [com.utils.JavaDeserializer](consumer/src/main/java/com/utils/JavaDeserializer.java))
       - The custom deserializer is specified in [resources/consumer.properties](consumer/src/main/resources/consumer.properties) (_value.deserializer=com.utils.JavaDeserializer_)
@@ -82,15 +82,15 @@ In the second part, we consume the messages of the producers using consumers wit
 
 #### Instruction
 
-- Examine the control-flow within the class [ConsumerForAllEvents](consumer/src/main/java/com/examples/ConsumerForAllEvents.java).
+- Examine the control-flow within the class [ConsumerForAllEvents](consumer/src/main/java/com/examples/ConsumerForAllEvents.java)
 
-### "ConsumerForGazeEventsForSingleEyeTracker": 
+### ConsumerForGazeEventsForSingleEyeTracker: 
 
-- Prerequisite for running: "EyeTrackers-Producer" (Class "com.examples.EyeTrackersProducer") is running
+- Prerequisite for running [ConsumerForGazeEventsForSingleEyeTracker](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTracker.java): [EyeTrackers-Producer](EyeTrackers-Producer/) (Main Class [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java)) is running
 
 
-- Main Class: com.examples.ConsumerForGazeEventsForSingleEyeTracker
-  - This consumer consumes the events coming from a single eye-tracker (deviceID: 0) (These events were stored in partition "0" within the _"gaze-events"_ topic)
+- Main Class: [com.examples.ConsumerForGazeEventsForSingleEyeTracker](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTracker.java)
+  - This consumer consumes the events coming from a **single** eye-tracker _(deviceID: 0)_ (These events were stored in _partition "0"_ within the _"gaze-events"_ topic)
     - This is specified using the following code fragment
     ```Java
         // Read specific topic and partition
@@ -100,16 +100,16 @@ In the second part, we consume the messages of the producers using consumers wit
 
 #### Instruction
 
-- Examine the control-flow within the class "com.examples.ConsumerForGazeEventsForSingleEyeTracker".
+- Examine the control-flow within the class [com.examples.ConsumerForGazeEventsForSingleEyeTracker](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTracker.java)
 
-### "ConsumerForGazeEventsForSingleEyeTrackerCustomOffset":
+### ConsumerForGazeEventsForSingleEyeTrackerCustomOffset:
 
-- Prerequisite for running: "EyeTrackers-Producer" (Class "com.examples.EyeTrackersProducer") is running
+- Prerequisite for running [ConsumerForGazeEventsForSingleEyeTrackerCustomOffset](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTrackerCustomOffset.java): [EyeTrackers-Producer](EyeTrackers-Producer/) (Main Class [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java)) is running
 
 
-- Main Class: com.examples.ConsumerForGazeEventsForSingleEyeTrackerCustomOffset
-  - This consumer consumes the events coming from a single eye-tracker (deviceID: 0) (These events were stored in partition "0" within the _"gaze-events"_ topic)
-  - In addition, the consumer starts reading events from a specific user-defined offset (i.e., int offsetToReadFrom)
+- Main Class: [com.examples.ConsumerForGazeEventsForSingleEyeTrackerCustomOffset](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTrackerCustomOffset.java)
+  - This consumer consumes the events coming from a **single** eye-tracker (_deviceID: 0)_ (These events were stored in partition _"0"_ within the _"gaze-events"_ topic)
+  - In addition, the consumer starts reading events from a _specific user-defined offset_ (i.e., _int offsetToReadFrom_)
     - This is specified using the following code fragment
     ```Java
         // get consumer latest offset
@@ -129,7 +129,7 @@ In the second part, we consume the messages of the producers using consumers wit
 
 #### Instruction
 
-- Examine the control-flow within the class "com.examples.ConsumerForGazeEventsForSingleEyeTrackerCustomOffset". Try out different values in offsetToReadFrom
+- Examine the control-flow within the class [com.examples.ConsumerForGazeEventsForSingleEyeTrackerCustomOffset](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTrackerCustomOffset.java). Try out different values in _offsetToReadFrom_
 
 
 ### "rebalancingExample.*": 
