@@ -6,7 +6,7 @@
 
 ## Use Case
 
-- This lab simulates a system where eye-tracking data coming from two eye-trackers and user clicks are streamed
+- This lab simulates a system where user clicks and eye-tracking data coming from two eye-trackers are streamed
 - The eye-tracking data captures the gazes of two developers doing pair programming
 - We use Kafka producers and consumers to simulate this system
 
@@ -24,8 +24,8 @@ In the second part, we consume the messages of the producers using consumers wit
 - [_ConsumerForGazeEventsForSingleEyeTrackerCustomOffset_](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTrackerCustomOffset.java): consumes the events coming from a single eye-tracker and starts from a specific user-defined offset
 - [_rebalancingExample.*_](consumer/src/main/java/com/examples/rebalancingExample/): two classes that demonstrate how Kafka does rebalancing when a new consumer is added (within the same group)
 - [_singleAcessToPartitionAndRebalancingExample.*_](consumer/src/main/java/com/examples/singleAcessToPartitionAndRebalancingExample/): two classes demonstrating how Kafka allows only one consumer to read from a partition and how rebalancing occurs when a running consumer is out
-- [_customCommit.singleAcessToPartitionAndRebalancingExample.*_](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/): two classes demonstrating in the context of manual offset commit (occuring after every n consumer polls) the impact of rebalancing on events duplication and loss
-- [_customCommit.commitLargerOffset.*_](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/): two classes demonstrating events loss when a manual offset that is larger than the offset of the latest processed events in set
+- [_customCommit.singleAcessToPartitionAndRebalancingExample.*_](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/): two classes demonstrating the use of manual offset commit (occuring after every n consumer polls) and the impact of rebalancing on events duplication and loss
+- [_customCommit.commitLargerOffset.*_](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/): two classes demonstrating events loss when a manual offset that is larger than the offset of the latest processed event is set
 
 ## Producers
 
