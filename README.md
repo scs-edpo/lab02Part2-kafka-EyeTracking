@@ -1,6 +1,6 @@
 # lab02Part2-kafka-EyeTracking
 
-- This lab is based on Lab02, which is also a prerequisite for this lab
+- This lab is based on Lab02Part1, which is also a prerequisite for this lab
 - Note that only the new concepts are described in this lab
 - The procedure to run the code is similar to Lab02. We recommend importing the project to  IntelliJ and let the IDE handle everything
 
