@@ -15,41 +15,39 @@ import java.util.*;
 
 public class EyeTrackersProducer {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws  Exception {
 
         // Specify Topic
         String topic = "gaze-events";
 
-        // deviceIDs with a counter of the generated events
-        HashMap<Integer,Integer> deviceIDs = new HashMap<>(){
-            {
-                // device id (correspond to topic's  partition id), counter of generated events
-                put(0, 0);
-                put(1, 0);
-            }};
 
-        // create Kafka producer, set properties settings, delete existing topic, create new topic
-        KafkaProducer<String, Gaze> producer;
+        // read Kafka properties file
+        Properties properties;
         try (InputStream props = Resources.getResource("producer.properties").openStream()) {
-            // set properties
-            Properties properties = new Properties();
+            properties = new Properties();
             properties.load(props);
-            // init producer
-            producer = new KafkaProducer<>(properties);
-            /// delete existing topic with the same name
-            deleteTopic(topic, properties);
-            // create new topic with 2 partitions
-            try {
-                createTopic(topic, 2, properties);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
+
+        // create Kafka producer
+        KafkaProducer<String, Gaze> producer = producer = new KafkaProducer<>(properties);
+
+        /// delete existing topic with the same name
+        deleteTopic(topic, properties);
+
+        // create new topic with 2 partitions
+        createTopic(topic, 2, properties);
 
 
         try {
 
+            // define an array with devices IDs
+            Integer[] deviceIDs = {0,1};
+
+            // define a counter which will be used as an eventID
+            int counter = 0;
+
             while(true) {
+
                 // sleep for 8 ms
                 try {
                     Thread.sleep(8);
@@ -58,13 +56,10 @@ public class EyeTrackersProducer {
                 }
 
                 // select random device
-                int deviceID =getRandomNumber(0, deviceIDs.size());
-
-                // get the corresponding events counter
-                int deviceEventsCounter = deviceIDs.get(deviceID);
+                int deviceID =getRandomNumber(0, deviceIDs.length);
 
                 // generate a random gaze event using constructor  Gaze(int eventID, long timestamp, int xPosition, int yPosition, int pupilSize)
-                Gaze gazeEvent = new Gaze(deviceEventsCounter,System.nanoTime(), getRandomNumber(0, 1920), getRandomNumber(0, 1080), getRandomNumber(3, 4));
+                Gaze gazeEvent = new Gaze(counter,System.nanoTime(), getRandomNumber(0, 1920), getRandomNumber(0, 1080), getRandomNumber(3, 4));
 
                 // send the gaze event
                 producer.send(new ProducerRecord<String, Gaze>(
@@ -76,8 +71,8 @@ public class EyeTrackersProducer {
                 // print to console
                 System.out.println("gazeEvent sent: "+gazeEvent.toString()+" from deviceID: "+deviceID);
 
-                // increment events counter for the specific device
-                deviceIDs.put(deviceID, deviceEventsCounter+1) ;
+                // increment counter i.e., eventID
+                counter++;
             }
 
         } catch (Throwable throwable) {

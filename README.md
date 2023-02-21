@@ -32,34 +32,151 @@ In the second part, we consume the messages of the producers using consumers wit
 ### ClickStream-Producer
 
 - Main Class:  [com.examples.ClicksProducer](ClickStream-Producer/src/main/java/com/examples/ClicksProducer.java)
-  - This producer produces clicks objects (see [com.data.Clicks](ClickStream-Producer/src/main/java/com/data/Clicks.java)) at a random time interval in range _[500ms, 5000ms]_ and send them as events through the "click-events" topic
-  - We use a custom serializer to serialize the events before sending them (see [com.utils.JavaSerializer](ClickStream-Producer/src/main/java/com/utils/JavaSerializer.java))
-    - The custom serializer is specified in [resources/producer.properties](ClickStream-Producer/src/main/resources/producer.properties) (_value.serializer=com.utils.JavaSerializer_)
-  - We use a **single partition** inside the _"click-events"_ topic so that all the events will be stored into that unique partition of the _"click-events"_ topic
-  - _Note:_ for simulation purpose, every time you run [com.examples.ClicksProducer](ClickStream-Producer/src/main/java/com/examples/ClicksProducer.java), the existing _"click-events"_ topic is deleted and a new topic with the same name is created.
 
+  - **Overview:** This producer produces click events and sends them through the _"click-events"_ topic.
+  - **Procedure (#P1):**
+    - Specify topic
+      ```Java
+          // Specify Topic
+          String topic = "click-events";
+         ```
+    - Read Kafka properties file
+       ```Java
+          // Read Kafka properties file
+          Properties properties;
+          try (InputStream props = Resources.getResource("producer.properties").openStream()) {
+              properties = new Properties();
+              properties.load(props);
+          }
+         ```
+      - The following is the content of the used properties file [producer.properties](ClickStream-Producer/src/main/resources/producer.properties)
+        ```properties
+           acks=all
+           retries=0
+           bootstrap.servers=localhost:9092
+           key.serializer=org.apache.kafka.common.serialization.StringSerializer
+           value.serializer=com.utils.JavaSerializer
+           ```
+      - Notice that we use a custom (value) serializer (see [com.utils.JavaSerializer](ClickStream-Producer/src/main/java/com/utils/JavaSerializer.java)) to serialize Java Objects before sending them 
+        - The custom serializer is specified in [producer.properties](ClickStream-Producer/src/main/resources/producer.properties) with: _value.serializer=com.utils.JavaSerializer_
+        
+    - Create Kafka producer with the loaded properties
+       ```Java
+        // Create Kafka producer
+        KafkaProducer<String, Clicks> producer = producer = new KafkaProducer<>(properties);
+       ```  
+    - For the sake of simulation,  delete any existing topic with the same _topic_ name (i.e., _click-events_) and create a new topic with 1 partition. **Note that, we use a single partition inside the "click-events" topic so that all the events will be stored into that unique partition of the "click-events" topic**
+       ```Java
+         /// delete existing topic with the same name
+          deleteTopic(topic, properties);
 
-- Main Class: [com.examples.DescribeTopics](ClickStream-Producer/src/main/java/com/examples/DescribeTopics.java) 
+          // create new topic with 1 partition
+          createTopic(topic, 1, properties);
+         ```
+    - Define  a counter which will be used as an eventID
+       ```Java
+          // define a counter which will be used as an eventID
+          int counter = 0;
+         ```        
+    - At each random time interval in range [500ms, 5000ms]
+      - Generate a random click event using constructor  _Clicks(int eventID, long timestamp, int xPosition, int yPosition, String clickedElement)_ (see [com.data.Clicks](ClickStream-Producer/src/main/java/com/data/Clicks.java)). Note that the counter is used as an eventID
+      ```Java
+      // generate a random click event using constructor  Clicks(int eventID, long timestamp, int xPosition, int yPosition, String clickedElement)
+        Clicks clickEvent = new Clicks(counter,System.nanoTime(), getRandomNumber(0, 1920), getRandomNumber(0, 1080), "EL"+getRandomNumber(1, 20));
+       ``` 
+        
+      - Send the click event and print the event to the producer console
+      ```Java
+              // send the click event
+              producer.send(new ProducerRecord<String, Clicks>(
+                      topic, // topic
+                      clickEvent  // value
+              ));
+
+              // print to console
+              System.out.println("clickEvent sent: "+clickEvent.toString());         ```         
+      ``` 
+      - Increment the counter (i.e., the eventID) for future use
+      ```Java
+      // increment counter i.e., eventID
+         counter++;
+       ```         
+      
+
+- _(Additional)_ Main Class: [com.examples.DescribeTopics](ClickStream-Producer/src/main/java/com/examples/DescribeTopics.java) 
   - The class provides an overview on the existing Kafka topics and the underlying partitions. It is based on the Kafka AdminClient Class (for documentation see: https://kafka.apache.org/23/javadoc/index.html?org/apache/kafka/clients/admin/AdminClient.html)
 
 #### Instruction
 
-- Explore the different classes within [ClickStream-Producer](ClickStream-Producer/src/main/) and check the control-flow within the class ["com.examples.ClicksProducer"](ClickStream-Producer/src/main/java/com/examples/ClicksProducer.java)
+- Explore the different classes within [ClickStream-Producer](ClickStream-Producer/src/main/) and examine the control-flow within the class ["com.examples.ClicksProducer"](ClickStream-Producer/src/main/java/com/examples/ClicksProducer.java)
 
 ### EyeTrackers-Producer
 
 - Main Class: [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java)
-  - This producer produces gaze objects (see [com.data.Gaze](EyeTrackers-Producer/src/main/java/com/data/Gaze.java)) at a specific rate _(8ms)_ and send them as events through the _"gaze-events"_ topic
-  - We use a custom serializer to serialize the events before sending them (see [com.utils.JavaSerializer](EyeTrackers-Producer/src/main/java/com/utils/JavaSerializer.java))
-    - The custom serializer is specified in [resources/producer.properties](EyeTrackers-Producer/src/main/resources/producer.properties) _(value.serializer=com.utils.JavaSerializer)_
-  - Each gaze object is assigned an event key _(deviceID: 0 or 1)_ referring to whether it comes from the first eye-tracker or the second one
-  - We use a **custom partitioner**, so that the events coming from each eye-tracker **are always stored into the same distinct partition** (see [com.utils.CustomPartitioner](EyeTrackers-Producer/src/main/java/com/utils/CustomPartitioner.java))
-    - _Reason:_ with the default partitioner, Kafka guarantees that events with the same key will go to the same partition, but not the other way around i.e., events with different keys will go always to different partitions. Knowing that events are assigned to partitions as follows: _"partitionID = hash(key)%num_partitions"_, with a low partition number (e.g., _num_partitions=2_), it is very likely that 2 events with different keys will still go to the same partition.
-    - The custom partitioner is specified in [resources/producer.properties](EyeTrackers-Producer/src/main/resources/producer.properties) _(partitioner.class=com.utils.CustomPartitioner)_
-  - _Note:_ for simulation purpose, every time you run [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java), the existing _"gaze-events"_ topic is deleted and a new topic with the same name is created.
+  - **Overview:** This producer produces gaze events and sends them through the _"gaze-events"_ topic.
+  - **Procedure (#P2):**
+    - Specify topic
+        ```Java
+            // Specify Topic
+            String topic = "gaze-events";
+        ```
+    - Read Kafka properties file (similar to Procedure [P1](#P1))
+       - The following is the content of the used properties file [producer.properties](EyeTrackers-Producer/src/main/resources/producer.properties)
+         ```properties
+            acks=all
+            retries=0
+            bootstrap.servers=localhost:9092
+            key.serializer=org.apache.kafka.common.serialization.StringSerializer
+            value.serializer=com.utils.JavaSerializer
+            partitioner.class = com.utils.CustomPartitioner
+            ```
+         - Remember that in our use-case, **we have 2 eye-trackers**, and we would like to **store the data from each eye-tracker into a distinct partition**. Therefore, we use a custom partitioner (see [com.utils.CustomPartitioner](EyeTrackers-Producer/src/main/java/com/utils/CustomPartitioner.java)) to ensure that **the events coming from each eye-tracker are always stored into the same distinct partition** 
+           - _Reason:_ with the default partitioner, Kafka guarantees that events with the same key will go to the same partition, but not the other way around i.e., events with different keys will go always to different partitions. Knowing that events are assigned to partitions as follows: _"partitionID = hash(key)%num_partitions"_, with a low partition number (e.g., _num_partitions=2_), it is very likely that 2 events with different keys will still go to the same partition.
+           - The custom partitioner is specified in [resources/producer.properties](EyeTrackers-Producer/src/main/resources/producer.properties) with: _partitioner.class=com.utils.CustomPartitioner_
+         - Similar to [P1](#P1), we use a custom  (value) serializer (see [com.utils.JavaSerializer](EyeTrackers-Producer/src/main/java/com/utils/JavaSerializer.java)) to serialize Java Objects before sending them 
+  
+    - Create Kafka producer with the loaded properties (similar to [P1](#P1))
+    - For the sake of simulation,  delete any existing topic with the same _topic_ name (i.e., _gaze-events_) and create a new topic with 2 partitions _(i.e., corresponding to two eye-trackers)_
+      ```Java
+        /// delete existing topic with the same name
+         deleteTopic(topic, properties);
 
+         // create new topic with 2 partitions
+         createTopic(topic, 2, properties);
+        ```
+    - Define a counter which will be used as an eventID
+      ```Java
+         // define a counter which will be used as an eventID
+         int counter = 0;
+        ```        
+    - At each 8ms
+      - Select a deviceID corresponding to a random eye-tracker (among the two available eye-trackers)
+        ```Java
+            // select random device
+            int deviceID =getRandomNumber(0, deviceIDs.length);
+        ```
+      - Generate a random gaze event using the constructor _Gaze(int eventID, long timestamp, int xPosition, int yPosition, int pupilSize)_ (see [com.data.Gaze](EyeTrackers-Producer/src/main/java/com/data/Gaze.java)). Note that the counter is used as an eventID
+        ```Java
+           // generate a random gaze event using constructor  Gaze(int eventID, long timestamp, int xPosition, int yPosition, int pupilSize)
+           Gaze gazeEvent = new Gaze(counter,System.nanoTime(), getRandomNumber(0, 1920), getRandomNumber(0, 1080), getRandomNumber(3, 4));         
+        ``` 
+          
+      - Send the gaze event and print the event to the producer console. **Notice that we use the deviceID as a key in the send method. This deviceID will be mapped to the corresponding partition in the _"gaze-events"_ topic**. 
+          ```Java
+                // send the gaze event
+                producer.send(new ProducerRecord<String, Gaze>(
+                        topic, // topic
+                        String.valueOf(deviceID), // key
+                        gazeEvent  // value
+                ));   
+                // print to console
+                System.out.println("gazeEvent sent: "+gazeEvent.toString()+" from deviceID: "+deviceID);
+                          
+        ```       
+      - Increment the counter (i.e., the eventID) for future use (Similar to [P1](#P1))
 
-- Main Class: [com.examples.DescribeTopics](EyeTrackers-Producer/src/main/java/com/examples/DescribeTopics.java)
+  
+- _(Additional)_ Main Class: [com.examples.DescribeTopics](EyeTrackers-Producer/src/main/java/com/examples/DescribeTopics.java)
   - The class provides an overview on the existing Kafka topics and the underlying partitions. It is based on the Kafka AdminClient Class (for documentation see: https://kafka.apache.org/23/javadoc/index.html?org/apache/kafka/clients/admin/AdminClient.html)
 
 #### Instruction
@@ -74,11 +191,61 @@ In the second part, we consume the messages of the producers using consumers wit
 
 
 - Main Class: [com.examples.ConsumerForAllEvents](consumer/src/main/java/com/examples/ConsumerForAllEvents.java) 
-    - This consumer consumes the events coming from both [ClickStream-Producer](ClickStream-Producer/) and [EyeTrackers-Producer](EyeTrackers-Producer/)
-    - We use a custom deserializer to deserialize the events when received (see [com.utils.JavaDeserializer](consumer/src/main/java/com/utils/JavaDeserializer.java))
-      - The custom deserializer is specified in [resources/consumer.properties](consumer/src/main/resources/consumer.properties) (_value.deserializer=com.utils.JavaDeserializer_)
-    - The consumer subscribe to two topics: _"gaze-events"_ and _"click-events"_
-    - The events in the _"gaze-events"_ topic come from **two partitions**, while the events in the _"click-events"_ come from **one partition only**
+
+  - **Overview:** this consumer consumes the events coming from both [ClickStream-Producer](ClickStream-Producer/) and [EyeTrackers-Producer](EyeTrackers-Producer/)
+  - **Procedure (#P3):**
+    - Read Kafka properties file and create Kafka consumer with the given properties
+         ```Java
+          // Read Kafka properties file and create Kafka consumer with the given properties
+          KafkaConsumer<String, Object> consumer;
+          try (InputStream props = Resources.getResource("consumer.properties").openStream()) {
+              Properties properties = new Properties();
+              properties.load(props);
+              consumer = new KafkaConsumer<>(properties);
+          }
+      ```
+      - The following is the content of the used properties file [consumer.properties](consumer/src/main/resources/consumer.properties)
+           ```properties
+                bootstrap.servers=localhost:9092
+                key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+                value.deserializer=com.utils.JavaDeserializer
+                group.id=grp1
+                auto.offset.reset=earliest
+           ```
+      - Notice that we use a custom (value) deserializer (see [com.utils.JavaDeserializer](consumer/src/main/java/com/utils/JavaDeserializer.java)) to deserialize Java Objects
+           - The custom deserializer is specified in [com.utils.JavaDeserializer](consumer/src/main/java/com/utils/JavaDeserializer.java) with: _value.deserializer=com.utils.JavaDeserializer_
+        
+    - Subscribe to two topics: _"gaze-events"_ and _"click-events"_. The events in the _"gaze-events"_ topic come from **two partitions**, while the events in the _"click-events"_ come from **one partition only**
+    ```Java
+      // Subscribe to relevant topics
+      consumer.subscribe(Arrays.asList("gaze-events","click-events"));
+      ```
+    
+    - Poll new events at specific rate and process consumer records
+    ```Java
+            // pool new data
+            ConsumerRecords<String, Object> records = consumer.poll(Duration.ofMillis(8));
+
+            // process consumer records depending on record.topic() and record.value()
+            for (ConsumerRecord<String, Object> record : records) {
+                // switch/case
+                switch (record.topic()) {
+                    //note: record.value() is a linkedHashMap (see utils.JavaDeserializer), use can use the following syntax to access specific attributes ((LinkedHashMap) record.value()).get("ATTRIBUTENAME").toString(); The object can be also reconstructed as Gaze object
+                    case "gaze-events":
+                        String value =   record.value().toString();
+                        System.out.println("Received gaze-events - key: " + record.key() +"- value: " + value + "- partition: "+record.partition());
+                        break;
+
+                    case "click-events":
+                        System.out.println("Received click-events - value: " + record.value()+ "- partition: "+record.partition());
+
+                        break;
+
+                    default:
+                        throw new IllegalStateException("Shouldn't be possible to get message on topic " + record.topic());
+                }
+            }
+     ```
 
 #### Instruction
 
@@ -90,13 +257,16 @@ In the second part, we consume the messages of the producers using consumers wit
 
 
 - Main Class: [com.examples.ConsumerForGazeEventsForSingleEyeTracker](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTracker.java)
-  - This consumer consumes the events coming from a **single** eye-tracker _(deviceID: 0)_ (These events were stored in _partition "0"_ within the _"gaze-events"_ topic)
-    - This is specified using the following code fragment
-    ```Java
-        // Read specific topic and partition
-        TopicPartition topicPartition = new TopicPartition("gaze-events", 0);
-        consumer.assign(Arrays.asList(topicPartition));
-       ```
+  - **Overview:** consumes the events coming from a single eye-tracker
+  - **Procedure (#P4)**:
+    - The procedure is similar to Procedure [P3](#P3), with the following difference:
+      - This consumer consumes the events coming from a **single** eye-tracker _(deviceID: 0)_ (These events were stored in _partition "0"_ within the _"gaze-events"_ topic)
+        - This is specified using the following code fragment
+         ```Java
+            // Read specific topic and partition
+            TopicPartition topicPartition = new TopicPartition("gaze-events", 0);
+            consumer.assign(Arrays.asList(topicPartition));
+            ```
 
 #### Instruction
 
@@ -108,24 +278,26 @@ In the second part, we consume the messages of the producers using consumers wit
 
 
 - Main Class: [com.examples.ConsumerForGazeEventsForSingleEyeTrackerCustomOffset](consumer/src/main/java/com/examples/ConsumerForGazeEventsForSingleEyeTrackerCustomOffset.java)
-  - This consumer consumes the events coming from a **single** eye-tracker (_deviceID: 0)_ (These events were stored in partition _"0"_ within the _"gaze-events"_ topic)
-  - In addition, the consumer starts reading events from a _specific user-defined offset_ (i.e., _int offsetToReadFrom_)
-    - This is specified using the following code fragment
-    ```Java
-        // get consumer latest offset
-        long latestoffset = consumer.position(topicPartition);
-        System.out.println("latest offset: "+latestoffset);
+  - **Overview:** consumes the events coming from a single eye-tracker and starts from a specific user-defined offset
+  - **Procedure (#P5):**
+    - The procedure is similar to Procedure [P4](#P4), with the following difference:
+      - The consumer starts reading events from a _specific user-defined offset_ (i.e., _int offsetToReadFrom_)
+        - This is specified using the following code fragment
+        ```Java
+            // get consumer latest offset
+            long latestoffset = consumer.position(topicPartition);
+            System.out.println("latest offset: "+latestoffset);
 
-        // seek to offsetToReadFrom
-        int offsetToReadFrom = 10;
-        // check that offsetToReadFrom<latestoffset
-        if(offsetToReadFrom<latestoffset) {
-            consumer.seek(topicPartition, offsetToReadFrom);
-        }
-       else {
-            System.err.println("offsetToReadFrom ("+offsetToReadFrom+") not yet reached");
-        }
-       ```
+            // seek to offsetToReadFrom
+            int offsetToReadFrom = 10;
+            // check that offsetToReadFrom<latestoffset
+            if(offsetToReadFrom<latestoffset) {
+                consumer.seek(topicPartition, offsetToReadFrom);
+            }
+           else {
+                System.err.println("offsetToReadFrom ("+offsetToReadFrom+") not yet reached");
+            }
+           ```
 
 #### Instruction
 
@@ -137,9 +309,9 @@ In the second part, we consume the messages of the producers using consumers wit
 - Prerequisite for running the classes within the package [rebalancingExample](consumer/src/main/java/com/examples/rebalancingExample/): [EyeTrackers-Producer](EyeTrackers-Producer/) (Main Class [com.examples.EyeTrackersProducer](EyeTrackers-Producer/src/main/java/com/examples/EyeTrackersProducer.java)) is running
 
 
-- The package contains two (main) classes [ConsumerForGazeEventsForEyeTrackerParitionsRebalancing1](consumer/src/main/java/com/examples/rebalancingExample/ConsumerForGazeEventsForEyeTrackerParitionsRebalancing1.java) and [ConsumerForGazeEventsForEyeTrackerParitionsRebalancing2](consumer/src/main/java/com/examples/rebalancingExample/ConsumerForGazeEventsForEyeTrackerParitionsRebalancing2.java). These classes demonstrate how Kafka does rebalancing when a new consumer is added (within the same consumer group)
+- **Overview:** The package contains two (main) classes [ConsumerForGazeEventsForEyeTrackerParitionsRebalancing1](consumer/src/main/java/com/examples/rebalancingExample/ConsumerForGazeEventsForEyeTrackerParitionsRebalancing1.java) and [ConsumerForGazeEventsForEyeTrackerParitionsRebalancing2](consumer/src/main/java/com/examples/rebalancingExample/ConsumerForGazeEventsForEyeTrackerParitionsRebalancing2.java). These classes demonstrate how Kafka does rebalancing when a new consumer is added (within the same consumer group)
 - For the sake of simulation, the classes [ConsumerForGazeEventsForEyeTrackerParitionsRebalancing1](consumer/src/main/java/com/examples/rebalancingExample/ConsumerForGazeEventsForEyeTrackerParitionsRebalancing1.java) and [ConsumerForGazeEventsForEyeTrackerParitionsRebalancing2](consumer/src/main/java/com/examples/rebalancingExample/ConsumerForGazeEventsForEyeTrackerParitionsRebalancing2.java) have duplicate code.
-- In both classes, a Kafka consumer is created, subscribed to the topic _"gaze-events"_ and prints the received events to the console
+- **Procedure (#P6):** In both classes, a Kafka consumer is created with the properties in [consumer.properties](consumer/src/main/resources/consumer.properties), subscribed to the topic _"gaze-events"_ and prints the received events to the console
 - Remember that the topic _"gaze-events"_ has **two partitions** (referring to the two eye-trackers)
 
 #### Instructions
@@ -157,9 +329,10 @@ In the second part, we consume the messages of the producers using consumers wit
 
 - Prerequisite for running the classes within the package [singleAcessToPartitionAndRebalancingExample](consumer/src/main/java/com/examples/singleAcessToPartitionAndRebalancingExample/): [ClickStream-Producer](ClickStream-Producer/) (Main Class [com.examples.ClicksProducer](ClickStream-Producer/src/main/java/com/examples/ClicksProducer.java)) is running
 
-- The package contains two (main) classes [singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly1.java) and [singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly2.java). These classes demonstrate how Kafka allows only one consumer (within a consumer group) to read from a partition and how rebalancing occurs when a running consumer is out
+
+- **Overview:** The package contains two (main) classes [singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly1.java) and [singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly2.java). These classes demonstrate how Kafka allows only one consumer (within a consumer group) to read from a partition and how rebalancing occurs when a running consumer is out
 - For the sake of simulation, the classes [singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly1.java) and [singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly2.java) have duplicate code.
-- In both classes, a Kafka consumer is created, subscribed to the topic _"click-events"_ and prints the received events to the console
+- **Procedure (#P7):** In both classes, a Kafka consumer is created, subscribed to the topic _"click-events"_ and prints the received events to the console
 - Remember that the topic _"click-events"_ has **1 partition only** and so this partition can be read by only one consumer within a consumer group
 
 #### Instructions
@@ -181,21 +354,22 @@ In the second part, we consume the messages of the producers using consumers wit
 - Prerequisite for running the classes within the package [customCommit.singleAcessToPartitionAndRebalancingExample](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample): [ClickStream-Producer](ClickStream-Producer/) (Main Class [com.examples.ClicksProducer](ClickStream-Producer/src/main/java/com/examples/ClicksProducer.java)) is running
 
 
-- The package contains two (main) classes [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly1.java) and [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly2.java). These classes demonstrate in the context of manual offset commit (occuring after every n consumer polls) the impact of rebalancing on events duplication and loss
+- **Overview:** The package contains two (main) classes [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly1.java) and [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly2.java). These classes demonstrate in the context of manual offset commit (occuring after every n consumer polls) the impact of rebalancing on events duplication and loss
 - For the sake of simulation, the classes [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly1.java) and [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly2.java) have duplicate code.
-- In both classes, a Kafka consumer is created, subscribed to the topic _"click-events"_ and prints the received events to the console
-- In this example, we use a different configuration for the consumer properties which is available in [resources/consumerCustomCommit.properties](consumer/src/main/resources/consumerCustomCommit.properties)
-  - What is different in this configuration is that we set _"enable.auto.commit=false"_ to disable automatic offset commits and so allow trying out the manual offset commits
-- In both Classes [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly1.java) and [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly2.java), everytime consumer.poll() is called and the records are read, a manual synchronized commit is done using the following code fragment
-  -  ```Java
-            try {
-                consumer.commitSync();
-                System.out.println("commit sync done");
-            } catch (CommitFailedException e) {
-               System.err.println("commit failed"+ e);
-            }
-       ```
-- Remember that the topic _"click-events"_ has **only 1 partition** and so this partition **can be read by only one consumer** within a consumer group
+- **Procedure (#P8):** 
+  - In this example, we use a different configuration for the consumer properties which is available in [resources/consumerCustomCommit.properties](consumer/src/main/resources/consumerCustomCommit.properties)
+    - What is different in this configuration is that we set _"enable.auto.commit=false"_ to disable automatic offset commits and so allow trying out the manual offset commits
+  - In both classes, a Kafka consumer is created, subscribed to the topic _"click-events"_ and prints the received events to the console
+  - In both Classes [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly1.java) and [customCommit.singleAcessToPartitionAndRebalancingExample.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/singleAcessToPartitionAndRebalancingExample/ConsumerForClickEventsOnly2.java), everytime consumer.poll() is called and the records are processed, a manual synchronized commit is done using the following code fragment
+    ```Java
+              try {
+                  consumer.commitSync();
+                  System.out.println("commit sync done");
+              } catch (CommitFailedException e) {
+                 System.err.println("commit failed"+ e);
+              }
+         ```
+  - Remember that the topic _"click-events"_ has **only 1 partition** and so this partition **can be read by only one consumer** within a consumer group
 
 #### Instructions
 
@@ -218,22 +392,21 @@ In the second part, we consume the messages of the producers using consumers wit
 - Prerequisite for running the classes within the package [customCommit.commitLargerOffset](consumer/src/main/java/com/examples/customCommit/commitLargerOffset): [ClickStream-Producer](ClickStream-Producer/) (Main Class [com.examples.ClicksProducer](ClickStream-Producer/src/main/java/com/examples/ClicksProducer.java)) is running
 
 
-- The package contains two (main) classes two classes [customCommit.commitLargerOffset.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly1.java) and [customCommit.commitLargerOffset.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly2.java). These classes demonstrate events loss when a manual offset that is larger than the offset of the latest processed event is set
+- **Overview:** The package contains two (main) classes two classes [customCommit.commitLargerOffset.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly1.java) and [customCommit.commitLargerOffset.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly2.java). These classes demonstrate events loss when a manual offset that is larger than the offset of the latest processed event is set
 - For the sake of simulation, the classes [customCommit.commitLargerOffset.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly1.java) and [customCommit.commitLargerOffset.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly2.java) have duplicate code.
-- In both classes, a Kafka consumer is created, subscribed to the topic _"click-events"_ and prints the received events to the console
-- In this example, we use the configuration in [resources/consumerCustomCommit.properties](consumer/src/main/resources/consumerCustomCommit.properties)
-  - This configuration sets _"enable.auto.commit=false"_ to disable automatic offset commits and so allow trying out the manual offset commits
-- In both Classes [customCommit.commitLargerOffset.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly1.java) and [customCommit.commitLargerOffset.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly2.java), everytime a record is read, a manual synchronized commit is done using the following code fragment
-  - ```Java
-            currentOffsets.put(
-                        new TopicPartition(record.topic(), record.partition()),
-                        new OffsetAndMetadata(record.offset() + 10, "no metadata"));
+- **Procedure (#P09):**
+    - Similar to Procedure [P8](#P8), in this example, we use the configuration in [resources/consumerCustomCommit.properties](consumer/src/main/resources/consumerCustomCommit.properties)
+      - This configuration sets _"enable.auto.commit=false"_ to disable automatic offset commits and so allow trying out the manual offset commits
+    - In both classes, a Kafka consumer is created, subscribed to the topic _"click-events"_ and prints the received events to the console
+    - In both Classes [customCommit.commitLargerOffset.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly1.java) and [customCommit.commitLargerOffset.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly2.java), everytime a record is processed, a manual synchronized commit is done using the following code fragment. This code fragment, commits an offset which correspond to the current _record.offset() + 10_
+      ```Java
+         currentOffsets.put(
+             new TopicPartition(record.topic(), record.partition()),
+             new OffsetAndMetadata(record.offset() + 10, "no metadata"));
 
-                consumer.commitSync(currentOffsets);
-       ```
-  - This code fragments, commits an offset which correspond to the current _record.offset() + 10_
-  
-- Remember that the topic _"click-events"_ has only **1 partition** and so this partition **can be read by only one consumer** within a consumer group
+         consumer.commitSync(currentOffsets);
+           ```
+    - Remember that the topic _"click-events"_ has only **1 partition** and so this partition **can be read by only one consumer** within a consumer group
 
 #### Instructions
 
@@ -245,7 +418,7 @@ In the second part, we consume the messages of the producers using consumers wit
   - Check that only one of the two consumers will keep consuming the events while the other consumer will stay idle
 - Stop the non-idle consumer _i.e., the one still consuming events_
   - Check that the other consumer will take over and start consuming events
-- Assuming that the click events have an incremental eventID, by comparing the output consoles of [customCommit.commitLargerOffset.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly1.java) and [customCommit.commitLargerOffset.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly2.java), check whether some events are lost
+- Assuming that the click events have an incremental eventID, by comparing the output consoles of [customCommit.commitLargerOffset.ConsumerForClickEventsOnly1](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly1.java) and [customCommit.commitLargerOffset.ConsumerForClickEventsOnly2](consumer/src/main/java/com/examples/customCommit/commitLargerOffset/ConsumerForClickEventsOnly2.java), check whether some events are lost. What do you notice?
 
 
 

@@ -17,7 +17,7 @@ import java.util.Properties;
 public class ConsumerForGazeEventsForSingleEyeTracker {
     public static void main(String[] args) throws IOException, ParseException {
 
-        // initial settings
+        // Read Kafka properties file and create Kafka consumer with the given properties
         KafkaConsumer<String, Object> consumer;
         try (InputStream props = Resources.getResource("consumer.properties").openStream()) {
             Properties properties = new Properties();

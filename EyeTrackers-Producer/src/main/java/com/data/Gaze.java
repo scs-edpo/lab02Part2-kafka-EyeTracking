@@ -4,9 +4,9 @@ public class Gaze {
 
     int eventID;
     long timestamp;
-    int xPosition;
-    int yPosition;
-    int pupilSize;
+    int xPosition; // position of the gaze within the x-coordinate of the screen
+    int yPosition; // position of the gaze within the y-coordinate of the screen
+    int pupilSize; // size of the eye pupil as captured by the eye-tracker
 
 
     public Gaze(int eventID, long timestamp, int xPosition, int yPosition, int pupilSize) {

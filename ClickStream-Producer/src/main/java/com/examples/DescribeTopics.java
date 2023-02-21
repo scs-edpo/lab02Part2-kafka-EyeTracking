@@ -26,8 +26,6 @@ public class DescribeTopics {
         //describe topics
         describeTopics(admin);
 
-
-
         admin.close();
 
     }

@@ -15,36 +15,35 @@ import java.util.*;
 
 public class ClicksProducer {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         // Specify Topic
         String topic = "click-events";
 
-        // create Kafka producer, set properties settings, delete existing topic, create new topic
-        KafkaProducer<String, Clicks> producer;
+        // Read Kafka properties file
+        Properties properties;
         try (InputStream props = Resources.getResource("producer.properties").openStream()) {
-            // set properties
-            Properties properties = new Properties();
+            properties = new Properties();
             properties.load(props);
-            // init producer
-            producer = new KafkaProducer<>(properties);
-            /// delete existing topic with the same name
-            deleteTopic(topic, properties);
-            // create new topic with 1 partition
-            try {
-                createTopic(topic, 1, properties);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
+
+        // Create Kafka producer
+        KafkaProducer<String, Clicks> producer = producer = new KafkaProducer<>(properties);
+
+        /// delete existing topic with the same name
+        deleteTopic(topic, properties);
+
+        // create new topic with 1 partition
+        createTopic(topic, 1, properties);
 
 
         try {
 
-            // counter is used as an event id
+            // Define a counter which will be used as an eventID
             int counter = 0;
 
             while(true) {
+
                 // sleep for a random time interval between 500 ms and 5000 ms
                 try {
                     Thread.sleep(getRandomNumber(500, 5000));
@@ -64,7 +63,7 @@ public class ClicksProducer {
                 // print to console
                 System.out.println("clickEvent sent: "+clickEvent.toString());
 
-                // increment counter
+                // increment counter i.e., eventID
                 counter++;
 
             }
@@ -77,6 +76,7 @@ public class ClicksProducer {
 
 
     }
+
 
     /*
     Generate a random nunber

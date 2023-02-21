@@ -4,8 +4,8 @@ public class Clicks {
 
     int eventID;
     long timestamp;
-    int xPosition;
-    int yPosition;
+    int xPosition; // position of the click within the x-coordinate of the screen
+    int yPosition; // position of the click within the y-coordinate of the screen
     String clickedElement;
 
     public Clicks(int eventID, long timestamp, int xPosition, int yPosition, String clickedElement) {
