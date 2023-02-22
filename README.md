@@ -10,6 +10,13 @@
 - The eye-tracking data captures the gazes of two developers doing pair programming
 - We use Kafka producers and consumers to simulate this system
 
+## Objectives
+
+- Understanding the use of several producers and consumers with different configurations for topics and partitions
+- Hands-on a custom serializer and partitioner
+- Understanding how Kafka performs rebalancing and how it affects the distribution of partitions among consumers
+- Understanding offsets and manual offset commits
+
 ## Overview
 
 This lab consists of two parts.
