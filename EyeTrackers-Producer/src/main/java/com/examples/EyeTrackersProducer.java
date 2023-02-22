@@ -4,6 +4,7 @@ package com.examples;
 import com.data.Gaze;
 import com.google.common.io.Resources;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.DeleteTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -117,9 +118,17 @@ public class EyeTrackersProducer {
     Delete topic
      */
     private static void deleteTopic(String topicName, Properties properties) {
+
         try (AdminClient client = AdminClient.create(properties)) {
-            client.deleteTopics(Collections.singleton(topicName));
+            DeleteTopicsResult deleteTopicsResult  = client.deleteTopics(Collections.singleton(topicName));
+            while (!deleteTopicsResult.all().isDone()) {
+                // Wait for future task to complete
+            }
         }
+
+
+
+
 
 
     }

@@ -56,7 +56,7 @@ public class ConsumerForClickEventsOnly2 {
                 }
             }
 
-             //if(counter%10==0) //uncomment to commit after every 10 polls
+             //if(counter%40==0) //uncomment to commit after every 40 polls
             // commit after every poll
             try {
                 consumer.commitSync();
