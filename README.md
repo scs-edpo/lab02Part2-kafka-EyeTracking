@@ -12,10 +12,10 @@
 
 ## Objectives
 
-- Understanding the use of several producers and consumers with different configurations for topics and partitions
+- Experimenting several producers and consumers with different configurations for topics and partitions
 - Hands-on a custom serializer and partitioner
-- Understanding how Kafka performs rebalancing and how it affects the distribution of partitions among consumers
-- Understanding offsets and manual offset commits
+- Experimenting Kafka rebalancing and how it affects the distribution of partitions among consumers
+- Experimenting offsets and manual offset commits
 
 ## Overview
 
