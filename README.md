@@ -145,7 +145,7 @@ In the second part, we consume the messages of the producers using consumers wit
             partitioner.class = com.utils.CustomPartitioner
             ```
          - Remember that in our use-case, **we have 2 eye-trackers**, and we would like to **store the data from each eye-tracker into a distinct partition**. Therefore, we use a custom partitioner (see [com.utils.CustomPartitioner](EyeTrackers-Producer/src/main/java/com/utils/CustomPartitioner.java)) to ensure that **the events coming from each eye-tracker are always stored into the same distinct partition** 
-           - _Reason:_ with the default partitioner, Kafka guarantees that events with the same key will go to the same partition, but not the other way around i.e., events with different keys will go always to different partitions. Knowing that events are assigned to partitions as follows: _"partitionID = hash(key)%num_partitions"_, with a low partition number (e.g., _num_partitions=2_), it is very likely that 2 events with different keys will still go to the same partition.
+           - _Reason:_ with the default partitioner, Kafka guarantees that events with the same key will go to the same partition, but not the other way around i.e., events with different keys will go always to different partitions. 
            - The custom partitioner is specified in [resources/producer.properties](EyeTrackers-Producer/src/main/resources/producer.properties) with: _partitioner.class=com.utils.CustomPartitioner_
          - Similar to [P1](#P1), we use a custom  (value) serializer (see [com.utils.JavaSerializer](EyeTrackers-Producer/src/main/java/com/utils/JavaSerializer.java)) to serialize Java Objects before sending them 
   
