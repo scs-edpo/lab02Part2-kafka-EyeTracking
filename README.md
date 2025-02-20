@@ -41,7 +41,7 @@ In the second part, we consume the messages of the producers using consumers wit
 2. Start the Kafka and Zookeeper processes using Docker Compose:
 
     ```
-    $ docker-compose up
+    $ docker compose up
     ```
 
 ## Producers
