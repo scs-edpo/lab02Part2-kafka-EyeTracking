@@ -38,7 +38,7 @@ In the second part, we consume the messages of the producers using consumers wit
 ## Running the Docker image
 
 1. Open a terminal in the directory: docker/.
-2. Start the Kafka and Zookeeper processes using Docker Compose:
+2. Start the Kafka process using Docker Compose:
 
     ```
     $ docker compose up
